@@ -1,0 +1,11 @@
+# Terminal Multiplayer RPG Game
+# No external dependencies required - uses only Python standard library
+# Python 3.6+ required
+
+# The game uses only built-in modules:
+# - socket (networking)
+# - threading (concurrent connections)
+# - json (data handling)
+# - random (game mechanics)
+# - copy (object copying)
+
