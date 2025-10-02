@@ -8,18 +8,133 @@ import threading
 import json
 import random
 import copy
+import os
+import signal
+import sys
+from datetime import datetime
 from game_data import LOCATIONS, ENEMIES, WEAPONS, SPELLS, STARTING_STATS
 
 
 class GameServer:
-    def __init__(self, host='0.0.0.0', port=5555):
+    def __init__(self, host='0.0.0.0', port=5555, save_file=None):
         self.host = host
         self.port = port
         self.server = None
         self.players = {}  # {username: player_data}
         self.client_sockets = {}  # {username: socket}
         self.lock = threading.Lock()
+        self.save_file = save_file
+        self.running = True
+        self.saves_dir = "saves"
         
+        # Create saves directory if it doesn't exist
+        if not os.path.exists(self.saves_dir):
+            os.makedirs(self.saves_dir)
+        
+        # Load game state if save file provided
+        if save_file:
+            self.load_game(save_file)
+        
+        # Setup signal handlers for graceful shutdown
+        signal.signal(signal.SIGINT, self.shutdown_handler)
+        signal.signal(signal.SIGTERM, self.shutdown_handler)
+    
+    def save_game(self, save_file=None):
+        """Save the current game state to a .tms file."""
+        if save_file is None:
+            save_file = self.save_file
+        
+        if save_file is None:
+            # Generate a default save file name
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            save_file = f"world_{timestamp}.tms"
+        
+        save_path = os.path.join(self.saves_dir, save_file)
+        
+        # Prepare game state
+        game_state = {
+            "saved_at": datetime.now().isoformat(),
+            "players": self.players,
+            "server_info": {
+                "host": self.host,
+                "port": self.port
+            }
+        }
+        
+        try:
+            with open(save_path, 'w') as f:
+                json.dump(game_state, f, indent=2)
+            print(f"[SAVE] Game state saved to {save_path}")
+            return save_path
+        except Exception as e:
+            print(f"[ERROR] Failed to save game: {e}")
+            return None
+    
+    def load_game(self, save_file):
+        """Load game state from a .tms file."""
+        save_path = os.path.join(self.saves_dir, save_file)
+        
+        if not os.path.exists(save_path):
+            print(f"[ERROR] Save file not found: {save_path}")
+            return False
+        
+        try:
+            with open(save_path, 'r') as f:
+                game_state = json.load(f)
+            
+            self.players = game_state.get("players", {})
+            saved_at = game_state.get("saved_at", "unknown")
+            
+            print(f"[LOAD] Game state loaded from {save_path}")
+            print(f"[LOAD] Save date: {saved_at}")
+            print(f"[LOAD] Players loaded: {len(self.players)}")
+            
+            return True
+        except Exception as e:
+            print(f"[ERROR] Failed to load game: {e}")
+            return False
+    
+    def shutdown_handler(self, signum, frame):
+        """Handle graceful shutdown."""
+        print("\n[SERVER] Shutting down gracefully...")
+        
+        # Save game state
+        if self.players:
+            if self.save_file:
+                self.save_game(self.save_file)
+            else:
+                # Auto-generate save file name
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                save_file = f"autosave_{timestamp}.tms"
+                self.save_game(save_file)
+        
+        # Notify all connected players
+        self.broadcast("[SERVER] Server is shutting down. Your progress has been saved.")
+        
+        # Close all client connections
+        with self.lock:
+            for username, client_socket in list(self.client_sockets.items()):
+                try:
+                    client_socket.close()
+                except:
+                    pass
+        
+        # Close server socket
+        if self.server:
+            self.server.close()
+        
+        print("[SERVER] Shutdown complete.")
+        sys.exit(0)
+        
+    def auto_save_loop(self):
+        """Periodically save game state."""
+        import time
+        while self.running:
+            time.sleep(300)  # Auto-save every 5 minutes
+            if self.players and self.save_file:
+                print("[AUTO-SAVE] Saving game state...")
+                self.save_game()
+    
     def start(self):
         """Start the game server."""
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -28,6 +143,13 @@ class GameServer:
         self.server.listen(5)
         print(f"[SERVER] Game server started on {self.host}:{self.port}")
         print(f"[SERVER] Waiting for players to connect...")
+        
+        # Start auto-save thread
+        if self.save_file:
+            auto_save_thread = threading.Thread(target=self.auto_save_loop)
+            auto_save_thread.daemon = True
+            auto_save_thread.start()
+            print(f"[SERVER] Auto-save enabled (every 5 minutes)")
         
         while True:
             try:
@@ -68,13 +190,9 @@ class GameServer:
             self.broadcast(f"[SERVER] {username} has joined the realm!", exclude=username)
             
             # Send initial status
-            print(f"[DEBUG] Sending initial status to {username}")
             self.show_status(username)
-            print(f"[DEBUG] Sending location to {username}")
             self.show_location(username)
-            print(f"[DEBUG] Sending help prompt to {username}")
             self.send_message(client_socket, "\nType 'help' for available commands.\n\n")
-            print(f"[DEBUG] All initial messages sent to {username}")
             
             # Main game loop for this client
             while True:
@@ -472,6 +590,9 @@ class GameServer:
 
 
 if __name__ == "__main__":
+    # Basic server startup without menu (use server_launcher.py for menu)
+    print("Starting server without save file selection...")
+    print("Use server_launcher.py for save file menu.")
     server = GameServer(host='0.0.0.0', port=5555)
     server.start()
 

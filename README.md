@@ -55,11 +55,26 @@ From weakest to strongest:
 
 #### 1. Start the Server
 
-First, start the game server on one machine:
+You have two options for starting the server:
+
+**Option A: With Save File Menu (Recommended)**
+
+```bash
+python server_launcher.py
+```
+
+This will show a menu where you can:
+- Load an existing save file
+- Start a new world
+- View save file details (player count, save date, etc.)
+
+**Option B: Quick Start Without Menu**
 
 ```bash
 python game_server.py
 ```
+
+This starts a new world without the save file selection menu.
 
 The server will start on `0.0.0.0:5555` by default, accepting connections from any IP address.
 
@@ -185,12 +200,57 @@ WEAPONS:
 - **Global Chat** - Use `say` to communicate with everyone
 - **Shared Notifications** - See when players join, leave, level up, or defeat enemies
 
+## Save System
+
+### How Saves Work
+
+The game features an automatic save system that preserves player progress:
+
+- **Save Files** - All saves are stored in the `saves/` directory as `.tms` files (Terminal Multiplayer Save)
+- **Format** - Save files use JSON format, making them human-readable and easy to edit
+- **Auto-Save** - Game automatically saves every 5 minutes
+- **Graceful Shutdown** - Pressing `Ctrl+C` saves the game before shutting down
+
+### Save File Contents
+
+Each `.tms` file contains:
+- All player data (stats, inventory, location, etc.)
+- Timestamp of when it was saved
+- Server configuration
+
+Example save file structure:
+```json
+{
+  "saved_at": "2025-10-02T14:30:45",
+  "players": {
+    "Hero": {
+      "health": 120,
+      "level": 5,
+      "location": "dark_forest",
+      ...
+    }
+  },
+  "server_info": {
+    "host": "0.0.0.0",
+    "port": 5555
+  }
+}
+```
+
+### Managing Save Files
+
+- **View Saves** - Use `server_launcher.py` to see all available saves
+- **Load Save** - Select from the menu when starting the server
+- **Edit Saves** - Save files are JSON, so you can edit them manually if needed
+- **Backup** - Simply copy `.tms` files from the `saves/` directory
+
 ## Technical Details
 
 ### Architecture
 - **Server** (`game_server.py`) - Handles all game logic and manages player connections
 - **Client** (`game_client.py`) - Provides the terminal interface for players
 - **Game Data** (`game_data.py`) - Contains all game content (locations, enemies, items)
+- **Server Launcher** (`server_launcher.py`) - Save file selection menu
 
 ### Networking
 - Uses TCP sockets for reliable communication
@@ -198,13 +258,13 @@ WEAPONS:
 - Each player connection runs in its own thread
 
 ### Data Persistence
-- Currently, player data is stored in memory on the server
-- Player data persists as long as the server is running
-- To add permanent persistence, you could extend the code to save/load player data to JSON files
+- Player data is saved to `.tms` files in JSON format
+- Automatic periodic saves every 5 minutes
+- Graceful shutdown saves on Ctrl+C
+- Save files persist across server restarts
 
 ## Future Enhancement Ideas
 
-- Save player data to files for persistence across server restarts
 - Add more locations, enemies, and items
 - Implement a quest system
 - Add player-vs-player combat

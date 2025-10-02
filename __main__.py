@@ -20,9 +20,10 @@ def main():
     
     if choice == "1":
         print("\nStarting game server...\n")
-        from game_server import GameServer
-        server = GameServer(host='0.0.0.0', port=5555)
-        server.start()
+        from server_launcher import main
+        # server = GameServer(host='0.0.0.0', port=5555)
+        # server.start()
+        main()
     
     elif choice == "2":
         print("\nStarting game client...\n")
