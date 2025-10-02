@@ -43,6 +43,7 @@ class GameClient:
         """Receive and display messages from the server."""
         while self.running:
             try:
+                print(">>> ", end='', flush=True)
                 message = self.client.recv(4096).decode('utf-8')
                 if message:
                     print(message, end='', flush=True)

@@ -54,7 +54,7 @@ def select_save_file():
     save_files = get_save_files()
     
     print("="*70)
-    print("🎮 Terminal Multiplayer RPG - Server Launcher")
+    print("Terminal Multiplayer RPG - Server Launcher")
     print("="*70)
     print()
     
@@ -93,7 +93,7 @@ def select_save_file():
             index = int(choice) - 1
             if 0 <= index < len(save_files):
                 selected = save_files[index]
-                print(f"\n✓ Selected: {selected}")
+                print(f"\n[OK] Selected: {selected}")
                 return selected
             else:
                 print(f"Invalid choice. Please enter a number between 1 and {len(save_files)}, N, or Q.")

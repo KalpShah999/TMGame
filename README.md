@@ -132,7 +132,10 @@ When you connect, you'll be prompted to enter a username. This will be your char
   - Example: `say Hello everyone!`
 
 ### Other Commands
-- `help` - Display list of commands
+- `help` - Display categorized help menu
+- `help <category>` - Show help for specific category
+  - Example: `help 2` or `help combat`
+  - Categories: Movement, Combat, Information, Shopping, Social
 - `quit` or `exit` - Disconnect from the game
 
 ## Gameplay Tips

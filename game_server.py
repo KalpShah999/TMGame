@@ -192,7 +192,7 @@ class GameServer:
             # Send initial status
             self.show_status(username)
             self.show_location(username)
-            self.send_message(client_socket, "\nType 'help' for available commands.\n\n")
+            self.send_message(client_socket, "\n[TIP] Type 'help' to see the help menu with command categories.\n\n")
             
             # Main game loop for this client
             while True:
@@ -284,7 +284,12 @@ class GameServer:
         
         # Help
         elif cmd == 'help':
-            self.show_help(username)
+            if len(parts) > 1:
+                # Help with category
+                self.show_help(username, parts[1])
+            else:
+                # Show help menu
+                self.show_help(username)
         
         else:
             self.send_to_player(username, "Unknown command. Type 'help' for available commands.\n")
@@ -310,7 +315,7 @@ class GameServer:
         loc = LOCATIONS[player['location']]
         
         msg = f"\n{'='*60}\n"
-        msg += f"📍 {loc['name']}\n"
+        msg += f"LOCATION: {loc['name']}\n"
         msg += f"{'='*60}\n"
         msg += f"{loc['description']}\n\n"
         
@@ -326,7 +331,7 @@ class GameServer:
         
         # Show enemies
         if loc['enemies']:
-            msg += f"⚔️  Enemies: {', '.join([ENEMIES[e]['name'] for e in loc['enemies']])}\n"
+            msg += f"[!] Enemies: {', '.join([ENEMIES[e]['name'] for e in loc['enemies']])}\n"
         
         msg += f"{'='*60}\n"
         self.send_to_player(username, msg)
@@ -337,14 +342,14 @@ class GameServer:
         weapon = WEAPONS[player['weapon']]
         
         msg = f"\n{'='*60}\n"
-        msg += f"⚔️  {username} - Level {player['level']} Adventurer\n"
+        msg += f"CHARACTER: {username} - Level {player['level']} Adventurer\n"
         msg += f"{'='*60}\n"
-        msg += f"❤️  Health: {player['health']}/{player['max_health']}\n"
-        msg += f"✨ Mana: {player['mana']}/{player['max_mana']}\n"
-        msg += f"⭐ EXP: {player['exp']}/{player['exp_to_level']}\n"
-        msg += f"💰 Gold: {player['gold']}\n"
-        msg += f"🗡️  Weapon: {weapon['name']} (Damage: {weapon['damage']})\n"
-        msg += f"📜 Spells: {len(player['spells'])}\n"
+        msg += f"Health: {player['health']}/{player['max_health']}\n"
+        msg += f"Mana: {player['mana']}/{player['max_mana']}\n"
+        msg += f"EXP: {player['exp']}/{player['exp_to_level']}\n"
+        msg += f"Gold: {player['gold']}\n"
+        msg += f"Weapon: {weapon['name']} (Damage: {weapon['damage']})\n"
+        msg += f"Spells: {len(player['spells'])}\n"
         msg += f"{'='*60}\n"
         
         self.send_to_player(username, msg)
@@ -355,7 +360,7 @@ class GameServer:
         weapon = WEAPONS[player['weapon']]
         
         msg = f"\n{'='*60}\n"
-        msg += f"🎒 Inventory\n"
+        msg += f"INVENTORY\n"
         msg += f"{'='*60}\n"
         msg += f"Equipped Weapon: {weapon['name']} (Damage: {weapon['damage']})\n\n"
         
@@ -393,7 +398,7 @@ class GameServer:
         enemy = copy.deepcopy(ENEMIES[enemy_type])
         weapon = WEAPONS[player['weapon']]
         
-        self.send_to_player(username, f"\n⚔️  Combat started with {enemy['name']}!\n")
+        self.send_to_player(username, f"\n[COMBAT] Battle started with {enemy['name']}!\n")
         self.broadcast(f"[COMBAT] {username} is fighting a {enemy['name']}!", exclude=username)
         
         while enemy['health'] > 0 and player['health'] > 0:
@@ -417,7 +422,8 @@ class GameServer:
             player['exp'] += enemy['exp_reward']
             player['gold'] += enemy['gold_reward']
             
-            self.send_to_player(username, f"\n🎉 Victory! You gained {enemy['exp_reward']} EXP and {enemy['gold_reward']} gold!\n")
+            self.send_to_player(username, f"\n[VICTORY] You gained {enemy['exp_reward']} EXP and {enemy['gold_reward']} gold!\n")
+            self.send_to_player(username, f"\n[INFO] You now have {player['health']} health, {player['mana']} mana, {player['gold']} gold, and {player['exp']} EXP.\n")
             self.broadcast(f"[COMBAT] {username} defeated a {enemy['name']}!", exclude=username)
             
             # Check for level up
@@ -428,7 +434,7 @@ class GameServer:
             player['location'] = 'town_square'
             player['gold'] = max(0, player['gold'] - 20)
             
-            self.send_to_player(username, "\n💀 You were defeated! You wake up in the town square with reduced gold.\n")
+            self.send_to_player(username, "\n[DEFEAT] You were defeated! You wake up in the town square with reduced gold.\n")
             self.broadcast(f"[COMBAT] {username} was defeated by a {enemy['name']}!", exclude=username)
             self.show_location(username)
     
@@ -457,7 +463,7 @@ class GameServer:
         if spell['damage'] < 0:
             heal_amount = abs(spell['damage'])
             player['health'] = min(player['max_health'], player['health'] + heal_amount)
-            self.send_to_player(username, f"✨ You cast {spell['name']} and restore {heal_amount} health!\n")
+            self.send_to_player(username, f"[SPELL] You cast {spell['name']} and restore {heal_amount} health!\n")
         else:
             # Attack spell (similar to attack command but with spell damage)
             loc = LOCATIONS[player['location']]
@@ -470,7 +476,7 @@ class GameServer:
             enemy = copy.deepcopy(ENEMIES[enemy_type])
             damage = spell['damage'] + random.randint(-3, 3)
             
-            self.send_to_player(username, f"✨ You cast {spell['name']} for {damage} damage!\n")
+            self.send_to_player(username, f"[SPELL] You cast {spell['name']} for {damage} damage!\n")
             self.broadcast(f"[MAGIC] {username} casts {spell['name']}!", exclude=username)
     
     def level_up(self, username):
@@ -484,7 +490,7 @@ class GameServer:
         player['max_mana'] += 10
         player['mana'] = player['max_mana']
         
-        msg = f"\n🌟 LEVEL UP! You are now level {player['level']}!\n"
+        msg = f"\n*** LEVEL UP! You are now level {player['level']}! ***\n"
         msg += f"Max Health: +20 (now {player['max_health']})\n"
         msg += f"Max Mana: +10 (now {player['max_mana']})\n"
         
@@ -494,7 +500,7 @@ class GameServer:
     def show_shop(self, username):
         """Show the shop."""
         msg = f"\n{'='*60}\n"
-        msg += "🏪 SHOP\n"
+        msg += "SHOP\n"
         msg += f"{'='*60}\n\n"
         
         msg += "WEAPONS:\n"
@@ -525,7 +531,7 @@ class GameServer:
             if player['gold'] >= weapon['cost']:
                 player['gold'] -= weapon['cost']
                 player['weapon'] = item_id
-                self.send_to_player(username, f"✅ Purchased {weapon['name']}!\n")
+                self.send_to_player(username, f"[OK] Purchased {weapon['name']}!\n")
             else:
                 self.send_to_player(username, f"Not enough gold! Need {weapon['cost']}, have {player['gold']}\n")
         
@@ -536,7 +542,7 @@ class GameServer:
             elif player['gold'] >= spell['cost']:
                 player['gold'] -= spell['cost']
                 player['spells'].append(item_id)
-                self.send_to_player(username, f"✅ Learned {spell['name']}!\n")
+                self.send_to_player(username, f"[OK] Learned {spell['name']}!\n")
             else:
                 self.send_to_player(username, f"Not enough gold! Need {spell['cost']}, have {player['gold']}\n")
         else:
@@ -545,7 +551,7 @@ class GameServer:
     def show_players(self, username):
         """Show all connected players."""
         msg = f"\n{'='*60}\n"
-        msg += "👥 ONLINE PLAYERS\n"
+        msg += "ONLINE PLAYERS\n"
         msg += f"{'='*60}\n"
         
         for player_name, player_data in self.players.items():
@@ -563,30 +569,123 @@ class GameServer:
         else:
             self.send_to_player(username, "Usage: say <message>\n")
     
-    def show_help(self, username):
-        """Show help message."""
-        msg = f"\n{'='*60}\n"
-        msg += "📖 COMMAND LIST\n"
-        msg += f"{'='*60}\n"
-        msg += "Movement:\n"
-        msg += "  north/n, south/s, east/e, west/w - Move in a direction\n\n"
-        msg += "Combat:\n"
-        msg += "  attack <enemy> - Attack an enemy\n"
-        msg += "  cast <spell> - Cast a spell\n\n"
-        msg += "Information:\n"
-        msg += "  status - View your stats\n"
-        msg += "  look - Look around current location\n"
-        msg += "  inventory/inv - View your inventory\n"
-        msg += "  players - See online players\n\n"
-        msg += "Shopping:\n"
-        msg += "  shop - View shop items\n"
-        msg += "  buy <item_id> - Purchase an item\n\n"
-        msg += "Social:\n"
-        msg += "  say <message> - Chat with other players\n\n"
-        msg += "  help - Show this help message\n"
-        msg += f"{'='*60}\n"
+    def show_help(self, username, category=None):
+        """Show help message with categories."""
+        if category is None:
+            # Show category menu
+            msg = f"\n{'='*60}\n"
+            msg += "HELP MENU - Select a Category\n"
+            msg += f"{'='*60}\n\n"
+            msg += "  [1] Movement     - How to navigate the world\n"
+            msg += "  [2] Combat       - Fighting enemies and using spells\n"
+            msg += "  [3] Information  - Checking stats and surroundings\n"
+            msg += "  [4] Shopping     - Buying weapons and spells\n"
+            msg += "  [5] Social       - Interacting with other players\n"
+            msg += "  [6] All          - Show all commands\n\n"
+            msg += f"{'='*60}\n"
+            msg += "Usage: help <number> or help <category>\n"
+            msg += "Example: help 2  OR  help combat\n"
+            msg += f"{'='*60}\n"
+        else:
+            msg = self.get_help_category(category)
         
         self.send_to_player(username, msg)
+    
+    def get_help_category(self, category):
+        """Get help text for a specific category."""
+        category = category.lower()
+        
+        # Map numbers and names to categories
+        category_map = {
+            '1': 'movement', 'movement': 'movement',
+            '2': 'combat', 'combat': 'combat',
+            '3': 'information', 'info': 'information', 'information': 'information',
+            '4': 'shopping', 'shop': 'shopping', 'shopping': 'shopping',
+            '5': 'social', 'social': 'social',
+            '6': 'all', 'all': 'all'
+        }
+        
+        category = category_map.get(category, None)
+        
+        if category is None:
+            return "Invalid category. Type 'help' to see available categories.\n"
+        
+        msg = f"\n{'='*60}\n"
+        
+        if category == 'movement' or category == 'all':
+            msg += "MOVEMENT COMMANDS\n"
+            msg += f"{'='*60}\n"
+            msg += "  north / n    - Move north\n"
+            msg += "  south / s    - Move south\n"
+            msg += "  east / e     - Move east\n"
+            msg += "  west / w     - Move west\n"
+            if category != 'all':
+                msg += f"{'='*60}\n"
+            else:
+                msg += "\n"
+        
+        if category == 'combat' or category == 'all':
+            if category == 'all':
+                msg += "COMBAT COMMANDS\n"
+                msg += f"{'='*60}\n"
+            msg += "  attack <enemy>  - Attack an enemy in your location\n"
+            msg += "                    Example: attack goblin\n"
+            msg += "  cast <spell>    - Cast a spell (requires mana)\n"
+            msg += "                    Example: cast fireball\n"
+            if category != 'all':
+                msg += f"{'='*60}\n"
+            else:
+                msg += "\n"
+        
+        if category == 'information' or category == 'all':
+            if category == 'all':
+                msg += "INFORMATION COMMANDS\n"
+                msg += f"{'='*60}\n"
+            msg += "  status       - View your character stats\n"
+            msg += "  look         - Look around your current location\n"
+            msg += "  inventory    - View your inventory and equipment\n"
+            msg += "  inv          - Shortcut for inventory\n"
+            msg += "  players      - See all online players and locations\n"
+            if category != 'all':
+                msg += f"{'='*60}\n"
+            else:
+                msg += "\n"
+        
+        if category == 'shopping' or category == 'all':
+            if category == 'all':
+                msg += "SHOPPING COMMANDS\n"
+                msg += f"{'='*60}\n"
+            msg += "  shop            - View available weapons and spells\n"
+            msg += "  buy <item_id>   - Purchase an item from the shop\n"
+            msg += "                    Example: buy iron_sword\n"
+            msg += "                    Example: buy fireball\n"
+            if category != 'all':
+                msg += f"{'='*60}\n"
+            else:
+                msg += "\n"
+        
+        if category == 'social' or category == 'all':
+            if category == 'all':
+                msg += "SOCIAL COMMANDS\n"
+                msg += f"{'='*60}\n"
+            msg += "  say <message>   - Send a message to all players\n"
+            msg += "                    Example: say Hello everyone!\n"
+            if category != 'all':
+                msg += f"{'='*60}\n"
+            else:
+                msg += "\n"
+        
+        if category == 'all':
+            msg += "OTHER COMMANDS\n"
+            msg += f"{'='*60}\n"
+            msg += "  help            - Show help menu\n"
+            msg += "  help <category> - Show help for specific category\n"
+            msg += "  quit / exit     - Disconnect from server\n"
+            msg += f"{'='*60}\n"
+        else:
+            msg += "\nType 'help' to return to the help menu.\n"
+        
+        return msg
 
 
 if __name__ == "__main__":
