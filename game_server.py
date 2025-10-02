@@ -167,7 +167,7 @@ class GameServer:
         username = None
         try:
             # Request username
-            self.send_message(client_socket, "Welcome to the Realm of Adventures!\nEnter your username: ")
+            self.send_message(client_socket, "Welcome to the Realm of Adventures!\nEnter your username: \n")
             username = self.receive_message(client_socket).strip()
             
             if not username:
@@ -499,20 +499,36 @@ class GameServer:
     
     def show_shop(self, username):
         """Show the shop."""
+        player = self.players[username]
+        current_weapon = player['weapon']
+        player_spells = player['spells']
+        player_gold = player['gold']
+        
         msg = f"\n{'='*60}\n"
-        msg += "SHOP\n"
+        msg += f"SHOP - Your Gold: {player_gold}\n"
         msg += f"{'='*60}\n\n"
         
         msg += "WEAPONS:\n"
         for weapon_id, weapon in WEAPONS.items():
-            msg += f"  {weapon_id}: {weapon['name']} - {weapon['damage']} damage - {weapon['cost']} gold\n"
+            owned = "[EQUIPPED]" if weapon_id == current_weapon else ""
+            affordable = "" if player_gold >= weapon['cost'] else "[TOO EXPENSIVE]"
+            msg += f"  {weapon_id:20s} - {weapon['name']:25s} "
+            msg += f"Dmg: {weapon['damage']:3d} | Cost: {weapon['cost']:4d} gold  "
+            msg += f"{owned} {affordable}\n"
         
         msg += "\nSPELLS:\n"
         for spell_id, spell in SPELLS.items():
-            msg += f"  {spell_id}: {spell['name']} - {spell['damage']} damage - {spell['cost']} gold\n"
+            owned = "[OWNED]" if spell_id in player_spells else ""
+            affordable = "" if player_gold >= spell['cost'] else "[TOO EXPENSIVE]"
+            effect = f"{spell['damage']} dmg" if spell['damage'] > 0 else f"+{abs(spell['damage'])} heal"
+            msg += f"  {spell_id:20s} - {spell['name']:25s} "
+            msg += f"{effect:10s} | Cost: {spell['cost']:4d} gold  "
+            msg += f"{owned} {affordable}\n"
         
         msg += f"\n{'='*60}\n"
         msg += "Usage: buy <item_id>\n"
+        msg += "Example: buy iron_sword  OR  buy fireball\n"
+        msg += f"{'='*60}\n"
         
         self.send_to_player(username, msg)
     
@@ -576,14 +592,14 @@ class GameServer:
             msg = f"\n{'='*60}\n"
             msg += "HELP MENU - Select a Category\n"
             msg += f"{'='*60}\n\n"
-            msg += "  [1] Movement     - How to navigate the world\n"
-            msg += "  [2] Combat       - Fighting enemies and using spells\n"
-            msg += "  [3] Information  - Checking stats and surroundings\n"
-            msg += "  [4] Shopping     - Buying weapons and spells\n"
-            msg += "  [5] Social       - Interacting with other players\n"
-            msg += "  [6] All          - Show all commands\n\n"
+            msg += ">> [1] Movement     - How to navigate the world\n"
+            msg += "   [2] Combat       - Fighting enemies and using spells\n"
+            msg += "   [3] Information  - Checking stats and surroundings\n"
+            msg += "   [4] Shopping     - Buying weapons and spells\n"
+            msg += "   [5] Social       - Interacting with other players\n"
+            msg += "   [6] All          - Show all commands\n\n"
             msg += f"{'='*60}\n"
-            msg += "Usage: help <number> or help <category>\n"
+            msg += "Type a number (1-6) or category name to see details\n"
             msg += "Example: help 2  OR  help combat\n"
             msg += f"{'='*60}\n"
         else:

@@ -4,33 +4,56 @@ This is a convenience script to quickly start either the server or client.
 """
 
 import sys
+from menu_utils import interactive_menu, clear_screen
 
 
 def main():
-    print("="*60)
-    print("Terminal Multiplayer RPG")
-    print("="*60)
-    print("\nWhat would you like to run?")
-    print("1. Game Server (host a game)")
-    print("2. Game Client (join a game)")
-    print("3. Exit")
-    print("="*60)
+    clear_screen()
     
-    choice = input("\nEnter your choice (1-3): ").strip()
+    options = [
+        "Game Server (host a game)",
+        "Game Client - Menu Driven (RECOMMENDED)",
+        "Game Client - Interactive",
+        "Game Client - Classic",
+        "Exit"
+    ]
     
-    if choice == "1":
+    descriptions = [
+        "Start the server with save file selection menu",
+        "Persistent menu that updates based on location/context",
+        "Action menus you can toggle in/out of",
+        "Traditional text-only commands",
+        "Exit the launcher"
+    ]
+    
+    choice = interactive_menu(
+        "Terminal Multiplayer RPG - Main Menu",
+        options,
+        descriptions,
+        show_indices=True
+    )
+    
+    if choice == 0:  # Server
         print("\nStarting game server...\n")
-        from server_launcher import main
-        # server = GameServer(host='0.0.0.0', port=5555)
-        # server.start()
-        main()
+        from server_launcher import main as server_main
+        server_main()
     
-    elif choice == "2":
-        print("\nStarting game client...\n")
+    elif choice == 1:  # Menu Client
+        print("\nStarting menu-driven game client...\n")
+        from game_client_menu import main as menu_client_main
+        menu_client_main()
+    
+    elif choice == 2:  # Interactive Client
+        print("\nStarting interactive game client...\n")
+        from game_client_interactive import main as interactive_client_main
+        interactive_client_main()
+    
+    elif choice == 3:  # Classic Client
+        print("\nStarting classic game client...\n")
         from game_client import main as client_main
         client_main()
     
-    elif choice == "3":
+    elif choice == 4 or choice == -1:  # Exit
         print("\nGoodbye!")
         sys.exit(0)
     
@@ -41,4 +64,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

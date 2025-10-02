@@ -8,6 +8,7 @@ import os
 import sys
 from datetime import datetime
 from game_server import GameServer
+from menu_utils import interactive_menu, clear_screen
 
 
 def get_save_files():
@@ -53,52 +54,50 @@ def select_save_file():
     """Display menu and let user select a save file."""
     save_files = get_save_files()
     
-    print("="*70)
-    print("Terminal Multiplayer RPG - Server Launcher")
-    print("="*70)
-    print()
+    clear_screen()
     
     if not save_files:
         print("No save files found. Starting a new world...")
         return None
     
-    print("Available save files:")
-    print()
+    # Build menu options
+    options = []
+    descriptions = []
     
-    # Display save files with details
-    for i, filename in enumerate(save_files, 1):
+    for filename in save_files:
         info = display_save_file_info(filename)
-        print(f"  [{i}] {filename}")
+        options.append(filename)
         if info:
-            print(f"      Saved: {info['saved_at']}")
-            print(f"      Players: {info['player_count']} ({info['players']})")
-        print()
+            desc = f"Saved: {info['saved_at']} | Players: {info['player_count']} ({info['players']})"
+            descriptions.append(desc)
+        else:
+            descriptions.append("")
     
-    print(f"  [N] Start a new world")
-    print(f"  [Q] Quit")
-    print()
-    print("="*70)
+    # Add special options
+    options.append("Start a new world")
+    descriptions.append("Create a fresh world with no existing players")
     
-    while True:
-        choice = input("\nSelect a save file (number, N for new, Q to quit): ").strip().upper()
-        
-        if choice == 'Q':
-            print("Exiting...")
-            sys.exit(0)
-        
-        if choice == 'N':
-            return None
-        
-        try:
-            index = int(choice) - 1
-            if 0 <= index < len(save_files):
-                selected = save_files[index]
-                print(f"\n[OK] Selected: {selected}")
-                return selected
-            else:
-                print(f"Invalid choice. Please enter a number between 1 and {len(save_files)}, N, or Q.")
-        except ValueError:
-            print("Invalid input. Please enter a number, N, or Q.")
+    options.append("Quit")
+    descriptions.append("Exit the launcher")
+    
+    # Show interactive menu
+    selected_idx = interactive_menu(
+        "Terminal Multiplayer RPG - Server Launcher",
+        options,
+        descriptions,
+        show_indices=True
+    )
+    
+    # Handle selection
+    if selected_idx == -1 or selected_idx == len(options) - 1:  # Quit
+        print("\nExiting...")
+        sys.exit(0)
+    elif selected_idx == len(options) - 2:  # New world
+        return None
+    else:
+        selected = save_files[selected_idx]
+        print(f"\n[OK] Selected: {selected}")
+        return selected
 
 
 def main():

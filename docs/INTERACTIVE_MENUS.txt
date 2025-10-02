@@ -1,0 +1,80 @@
+╔══════════════════════════════════════════════════════════════════╗
+║                 INTERACTIVE MENU QUICK REFERENCE                  ║
+╚══════════════════════════════════════════════════════════════════╝
+
+┌──────────────────────────────────────────────────────────────────┐
+│ CONTROLS                                                          │
+└──────────────────────────────────────────────────────────────────┘
+
+  Arrow Keys (macOS/Linux):
+    ↑  or  ↓     Navigate through options
+    ENTER        Select highlighted option
+
+  Keyboard Input (All platforms):
+    1, 2, 3...   Type number to select
+    quit, exit   Type name to select
+    Ctrl+C       Cancel/quit
+
+┌──────────────────────────────────────────────────────────────────┐
+│ VISUAL INDICATORS                                                 │
+└──────────────────────────────────────────────────────────────────┘
+
+  >>  Currently highlighted/selected option
+  [1] Option number
+  [EQUIPPED] You currently have this item
+  [OWNED] You already own this item
+  [TOO EXPENSIVE] You can't afford this item
+
+┌──────────────────────────────────────────────────────────────────┐
+│ EXAMPLE MENU                                                      │
+└──────────────────────────────────────────────────────────────────┘
+
+  ════════════════════════════════════════════════════════════
+  Main Menu
+  ════════════════════════════════════════════════════════════
+
+  >> [1] Start Server    - Host a multiplayer game
+     [2] Join Server     - Connect as a player
+     [3] Quit            - Exit the application
+
+  ════════════════════════════════════════════════════════════
+  Use ↑/↓ arrows to navigate, ENTER to select, or type number:
+
+┌──────────────────────────────────────────────────────────────────┐
+│ WHERE MENUS ARE USED                                              │
+└──────────────────────────────────────────────────────────────────┘
+
+  1. Main Launcher (__main__.py)
+     - Choose between server/client
+
+  2. Server Launcher (server_launcher.py)
+     - Select save file or start new world
+
+  3. In-Game Help (help command)
+     - Navigate help categories
+
+  4. Shop Menu (shop command)
+     - Browse weapons and spells
+
+┌──────────────────────────────────────────────────────────────────┐
+│ PLATFORM DIFFERENCES                                              │
+└──────────────────────────────────────────────────────────────────┘
+
+  macOS/Linux:   Full arrow key navigation with curses
+  Windows:       Text-based input (type numbers/names)
+
+  NOTE: Typing numbers/names works on ALL platforms!
+
+┌──────────────────────────────────────────────────────────────────┐
+│ QUICK TIPS                                                        │
+└──────────────────────────────────────────────────────────────────┘
+
+  • Arrow keys are fastest on macOS/Linux
+  • Typing still works if you prefer it
+  • Press Ctrl+C to quit any menu
+  • Look for the >> indicator to see what's selected
+
+╔══════════════════════════════════════════════════════════════════╗
+║  For full documentation, see docs/MENU_SYSTEM.md                 ║
+╚══════════════════════════════════════════════════════════════════╝
+
